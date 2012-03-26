@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <title>oneWeb Menu Editor Prototype</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="robots" content="noindex">
+    <meta name="robots" content="nofollow">
+
+    <link rel="stylesheet/less" type="text/css" href="css/main.less">
+    <script src="js/less-1.3.0.min.js"></script>
+    <!--
+    <script src="http://yui.yahooapis.com/3.5.0pr4/build/yui/yui-min.js"></script>
+    -->
+    <script src="js/yui3/yui/yui.js"></script>
+  </head>
+
+  <body class="yui3-app">
+
+    <div id="overlay" class="l1">
+      <ul class="grouping l2">
+        <li>
+          <span class="grouping-title">News</span>
+          <ul class="l3">
+            <div class="column">
+              <li>Aktuell</li>
+              <li>Demographie</li>
+              <li>Engagement</li>
+              <li>Ergebnisse</li>
+              <li>Klimawandel</li>
+            </div>
+            <div class="column">
+              <li>Naturkatastrophen</li>
+              <li>Personalien</li>
+              <li>Politik &amp; Wirtschaft</li>
+              <li>Straßensicherheit</li>
+            </div>
+          </ul>
+        </li>
+      </ul>
+      <ul class="grouping l2">
+        <li>
+          <span class="grouping-title">Presse-Service</span>
+          <ul class="l3x">
+            <div class="column">
+              <li>Kalender &amp; Events</li>
+              <li>Mediendatenbank</li>
+              <li>Presse-Kontakt</li>
+            </div>
+          </ul>
+        </li>
+      </ul>
+      <ul class="grouping l2">
+        <li><span class="add-new-grouping">Add New Section</span></li>
+      </ul>
+    </div>
+
+    <script>
+      YUI().use('app', 'view', 'dd', function(Y) {
+        var overlay = Y.one('#overlay');
+        var draggingUp = false;
+        var draggingRight = false;
+        var lastY = 0;
+        var lastX = 0;
+
+        /*Y.DD.DDM.on('drag:over', function(e) {
+          console.log('drop over: ', e);
+        })*/
+
+        Y.DD.DDM.on('ddm:start', function(e) {
+          /*Y.all('.l3').each(function(l3) {
+            var emptyCol = Y.Node.create('<div class="column empty"></div>');
+            l3.append(emptyCol);
+            emptyCol = l3.one('.column.empty');
+            var x = new Y.DD.Drop({ node: emptyCol });
+            x.on('drop:over', function(e) {
+              //console.log('FOOO');
+            });
+          });*/
+        });
+        Y.DD.DDM.on('ddm:end', function(e) {
+          console.log('ddm:end');
+          // Remove all empty column (both .empty and those who really have no childs left)
+          Y.later(50, Y, function() {
+            console.log('removing empty columns ...');
+            Y.all('.l3 .column').each(function(column) {
+              if (column.hasChildNodes()) {
+                if (column.hasClass('empty')) {
+                  column.removeClass('empty');
+                }
+              } else {
+                column.remove();                
+              }
+            });
+          })
+        });
+
+        // Make the groupings draggable
+        /*
+        overlay.all('.grouping').each(function(grouping) {
+          var dd = new Y.DD.Drag({
+            node: grouping,
+            target: true
+          })
+          .plug(Y.Plugin.DDProxy, {
+            moveOnEnd: false,
+            cloneNode: true
+          })
+          .plug(Y.Plugin.DDConstrained, {
+            constrain2node: overlay
+          });
+          dd.addHandle('.grouping-title');
+
+          dd.on('drag:start', function(e) {
+            var drag = e.target;
+            drag.get('node').setStyle('opacity', '.25');
+          });
+          dd.on('drag:drag', function(e) {
+            var x = e.target.lastXY[0];
+            draggingRight = (x > lastX);
+            lastX = x;
+          });
+          dd.on('drag:end', function(e) {
+            var drag = e.target;
+            drag.get('node').setStyle('opacity', '1.0');
+          });
+          dd.on('drag:over', function(e) {
+            var drag = e.drag.get('node'),
+              drop = e.drop.get('node');
+            if (drop.get('tagName').toLowerCase() == 'ul') {
+              drop.insert(drag, draggingRight ? 'after' : 'before');
+            }
+          });
+        });
+*/
+
+        overlay.all('.l3').each(function(l3) {
+          var x_max = l3.getX() + parseInt(l3.getComputedStyle('width'));
+          var x_min = x_max - 30;
+          console.log('xmax:' + x_max);
+          console.log('xmin:' + x_min);
+
+          var d = new Y.DD.Drop({ node: l3 });
+          d.on('drop:over', function(e) {
+            var emptyCol = l3.one('.column.empty');
+            console.log('\n\n+++++++++++++++++');
+            //console.log(e);
+            var x = e.drag.mouseXY[0];
+            console.log('x:' + x);
+            
+            if (x <= x_max && x >= x_min) {
+              console.log(x);              
+              if (emptyCol == null)  {
+                console.log('creating emptyCol');
+                emptyCol = Y.Node.create('<div class="column empty"></div>');
+                l3.append(emptyCol);
+                Y.DD.DDM.syncActiveShims(true);
+                x_max = l3.getX() + parseInt(l3.getComputedStyle('width'));
+              }
+            } else {
+              console.log('removing emptyCol');
+              if (emptyCol) emptyCol.remove();
+            }
+          });
+
+          l3.all('.column > li').each(function(li) {
+            li.on('dblclick', function(e) {
+              var val = li.get('text');
+              var input = Y.Node.create('<input type="text" value="' + val + '"/>');
+              input.on('keypress', function(e) {
+                if (e.keyCode == 13) {
+                  val = input.get('value');
+                  li.empty();
+                  li.set('text', val);
+                }
+              });
+              li.empty();
+              li.append(input);
+            });
+
+            var dd = new Y.DD.Drag({ 
+                node: li,
+                target: false
+              })
+              .plug(Y.Plugin.DDProxy, {
+                moveOnEnd: false,
+                cloneNode: true
+              })
+              .plug(Y.Plugin.DDConstrained, {
+                constrain2node: overlay
+              });
+
+            dd.on('drag:start', function(e) {
+              var drag = e.target;
+              drag.get('node').setStyle('opacity', '.25');
+
+              // Add an empty placeholder column
+              /*if (emptyCol == false) {
+                //emptyCol = Y.Node.create('<div class="column empty"></div>');
+                //l3.append(emptyCol);
+                emptyCol = l3.one('.column.empty');
+                console.log('emptyCol', emptyCol);
+                //emptyCol = l3;
+                var x = new Y.DD.Drop({ node: emptyCol });
+                Y.DD.DDM.clearCache();
+                x.sizeShim();
+                x.on('drop:over', function(e) {
+                  console.log('FOOO');
+                });
+              }*/
+            });
+            dd.on('drag:drag', function(e) {
+              var y = e.target.lastXY[1];
+              draggingUp = (y < lastY);
+              lastY = y;
+            });
+            dd.on('drag:end', function(e) {
+              var drag = e.target;
+              drag.get('node').setStyle('opacity', '1.0');
+            });
+            dd.on('drag:over', function(e) {
+              var drag = e.drag.get('node'),
+                drop = e.drop.get('node');
+              if (drop.get('tagName').toLowerCase() == 'li') {
+                console.log('XXXX');
+                drop.insert(drag, draggingUp ? 'before' : 'after');
+                e.drop.sizeShim();
+              } else if (drop.hasClass('empty')) {
+                drop.append(drag);
+              }
+            });
+            dd.on('drag:drophit', function(e) {
+              console.log('drop hit!');
+              drop = e.drop.get('node');
+              //drop.removeClass('empty');
+            });
+          });          
+        });
+      });
+    </script>
+  </body>
+</html>
