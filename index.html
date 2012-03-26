@@ -108,8 +108,25 @@
         });
 
         // Make the groupings draggable
-        /*
         overlay.all('.grouping').each(function(grouping) {
+
+          // Allow editing of the grouping title
+          var groupingTitle = grouping.one('.grouping-title');
+          groupingTitle.on('dblclick', function(e) {
+            var val = groupingTitle.get('text');
+            var input = Y.Node.create('<input type="text" value="' + val + '"/>');
+            input.on('keypress', function(e) {
+              console.log(e);
+              if (e.keyCode == 13) {
+                val = input.get('value');
+                groupingTitle.empty();
+                groupingTitle.set('text', val);
+              }
+            });
+            groupingTitle.empty();
+            groupingTitle.append(input);
+          });
+
           var dd = new Y.DD.Drag({
             node: grouping,
             target: true
@@ -144,7 +161,6 @@
             }
           });
         });
-*/
 
         overlay.all('.l3').each(function(l3) {
 
@@ -153,6 +169,7 @@
               var val = li.get('text');
               var input = Y.Node.create('<input type="text" value="' + val + '"/>');
               input.on('keypress', function(e) {
+                console.log(e);
                 if (e.keyCode == 13) {
                   val = input.get('value');
                   li.empty();
