@@ -41,7 +41,7 @@
       <ul class="grouping l2">
         <li>
           <span class="grouping-title">Presse-Service</span>
-          <ul class="l3x">
+          <ul class="l3">
             <div class="column">
               <li>Kalender &amp; Events</li>
               <li>Mediendatenbank</li>
@@ -56,7 +56,7 @@
     </div>
 
     <script>
-      YUI().use('app', 'view', 'dd', function(Y) {
+      YUI().use('dd', 'transition', function(Y) {
         var overlay = Y.one('#overlay');
         var draggingUp = false;
         var draggingRight = false;
@@ -68,15 +68,19 @@
         })*/
 
         Y.DD.DDM.on('ddm:start', function(e) {
-          /*Y.all('.l3').each(function(l3) {
+          Y.all('.l3').each(function(l3) {
             var emptyCol = Y.Node.create('<div class="column empty"></div>');
             l3.append(emptyCol);
-            emptyCol = l3.one('.column.empty');
+            emptyCol.transition({
+              easing: 'ease-in',
+              duration: 0.2,
+              opacity: '1.0'
+            });
             var x = new Y.DD.Drop({ node: emptyCol });
             x.on('drop:over', function(e) {
               //console.log('FOOO');
             });
-          });*/
+          });
         });
         Y.DD.DDM.on('ddm:end', function(e) {
           console.log('ddm:end');
@@ -89,7 +93,15 @@
                   column.removeClass('empty');
                 }
               } else {
-                column.remove();                
+                console.log('starting remove anim ...');
+                column.transition({
+                  easing: 'ease-out',
+                  duration: 0.2,
+                  opacity: '0.0'
+                }, function() {
+                  console.log('anim done');
+                  column.remove();                
+                });
               }
             });
           })
@@ -135,33 +147,6 @@
 */
 
         overlay.all('.l3').each(function(l3) {
-          var x_max = l3.getX() + parseInt(l3.getComputedStyle('width'));
-          var x_min = x_max - 30;
-          console.log('xmax:' + x_max);
-          console.log('xmin:' + x_min);
-
-          var d = new Y.DD.Drop({ node: l3 });
-          d.on('drop:over', function(e) {
-            var emptyCol = l3.one('.column.empty');
-            console.log('\n\n+++++++++++++++++');
-            //console.log(e);
-            var x = e.drag.mouseXY[0];
-            console.log('x:' + x);
-            
-            if (x <= x_max && x >= x_min) {
-              console.log(x);              
-              if (emptyCol == null)  {
-                console.log('creating emptyCol');
-                emptyCol = Y.Node.create('<div class="column empty"></div>');
-                l3.append(emptyCol);
-                Y.DD.DDM.syncActiveShims(true);
-                x_max = l3.getX() + parseInt(l3.getComputedStyle('width'));
-              }
-            } else {
-              console.log('removing emptyCol');
-              if (emptyCol) emptyCol.remove();
-            }
-          });
 
           l3.all('.column > li').each(function(li) {
             li.on('dblclick', function(e) {
@@ -180,7 +165,7 @@
 
             var dd = new Y.DD.Drag({ 
                 node: li,
-                target: false
+                target: true
               })
               .plug(Y.Plugin.DDProxy, {
                 moveOnEnd: false,
@@ -193,21 +178,6 @@
             dd.on('drag:start', function(e) {
               var drag = e.target;
               drag.get('node').setStyle('opacity', '.25');
-
-              // Add an empty placeholder column
-              /*if (emptyCol == false) {
-                //emptyCol = Y.Node.create('<div class="column empty"></div>');
-                //l3.append(emptyCol);
-                emptyCol = l3.one('.column.empty');
-                console.log('emptyCol', emptyCol);
-                //emptyCol = l3;
-                var x = new Y.DD.Drop({ node: emptyCol });
-                Y.DD.DDM.clearCache();
-                x.sizeShim();
-                x.on('drop:over', function(e) {
-                  console.log('FOOO');
-                });
-              }*/
             });
             dd.on('drag:drag', function(e) {
               var y = e.target.lastXY[1];
