@@ -68,43 +68,22 @@
         })*/
 
         Y.DD.DDM.on('ddm:start', function(e) {
-          Y.all('.l3').each(function(l3) {
-            var emptyCol = Y.Node.create('<div class="column empty"></div>');
-            l3.append(emptyCol);
-            emptyCol.transition({
-              easing: 'ease-in',
-              duration: 0.2,
-              opacity: '1.0'
-            });
-            var x = new Y.DD.Drop({ node: emptyCol });
-            x.on('drop:over', function(e) {
-              //console.log('FOOO');
-            });
-          });
+          var node = e.target;
+          console.log(node);
         });
+
         Y.DD.DDM.on('ddm:end', function(e) {
           console.log('ddm:end');
           // Remove all empty column (both .empty and those who really have no childs left)
           Y.later(50, Y, function() {
-            console.log('removing empty columns ...');
+            console.log('searching for empty columns ...');
             Y.all('.l3 .column').each(function(column) {
-              if (column.hasChildNodes()) {
-                if (column.hasClass('empty')) {
-                  column.removeClass('empty');
-                }
-              } else {
-                console.log('starting remove anim ...');
-                column.transition({
-                  easing: 'ease-out',
-                  duration: 0.2,
-                  opacity: '0.0'
-                }, function() {
-                  console.log('anim done');
-                  column.remove();                
-                });
+              if (!column.hasChildNodes()) {
+                console.log('removing an empty column!');
+                column.remove();                
               }
             });
-          })
+          });
         });
 
         // Make the groupings draggable
@@ -112,20 +91,22 @@
 
           // Allow editing of the grouping title
           var groupingTitle = grouping.one('.grouping-title');
-          groupingTitle.on('dblclick', function(e) {
-            var val = groupingTitle.get('text');
-            var input = Y.Node.create('<input type="text" value="' + val + '"/>');
-            input.on('keypress', function(e) {
-              console.log(e);
-              if (e.keyCode == 13) {
-                val = input.get('value');
-                groupingTitle.empty();
-                groupingTitle.set('text', val);
-              }
+          if (groupingTitle) {
+            groupingTitle.on('dblclick', function(e) {
+              var val = groupingTitle.get('text');
+              var input = Y.Node.create('<input type="text" value="' + val + '"/>');
+              input.on('keypress', function(e) {
+                console.log(e);
+                if (e.keyCode == 13) {
+                  val = input.get('value');
+                  groupingTitle.empty();
+                  groupingTitle.set('text', val);
+                }
+              });
+              groupingTitle.empty();
+              groupingTitle.append(input);
             });
-            groupingTitle.empty();
-            groupingTitle.append(input);
-          });
+          }
 
           var dd = new Y.DD.Drag({
             node: grouping,
@@ -163,6 +144,7 @@
         });
 
         overlay.all('.l3').each(function(l3) {
+          var emptyCol = false;
 
           l3.all('.column > li').each(function(li) {
             li.on('dblclick', function(e) {
@@ -192,9 +174,27 @@
                 constrain2node: overlay
               });
 
+/*            dd.on('drag:mouseup', function(e) {
+              console.log('mouseup');
+            });*/
+
             dd.on('drag:start', function(e) {
               var drag = e.target;
               drag.get('node').setStyle('opacity', '.25');
+
+              emptyCol = Y.Node.create('<div class="column empty"></div>');
+              l3.append(emptyCol);
+              emptyCol.transition({
+                easing: 'ease-in',
+                duration: 0.2,
+                opacity: '1.0'
+              }, function() {
+                Y.DD.DDM._activateTargets(); // workaround
+              });
+              var x = new Y.DD.Drop({ node: emptyCol });
+              x.on('drop:over', function(e) {
+                //console.log('FOOO');
+              });
             });
             dd.on('drag:drag', function(e) {
               var y = e.target.lastXY[1];
@@ -204,6 +204,19 @@
             dd.on('drag:end', function(e) {
               var drag = e.target;
               drag.get('node').setStyle('opacity', '1.0');
+
+              if (emptyCol.hasChildNodes()) {
+                emptyCol.removeClass('empty'); // it's not empty anymore :)
+              } else {
+                emptyCol.transition({
+                  easing: 'ease-out',
+                  duration: 0.2,
+                  opacity: '0.0'
+                }, function() {
+                  console.log('anim done');
+                  emptyCol.remove();                
+                });
+              }
             });
             dd.on('drag:over', function(e) {
               var drag = e.drag.get('node'),
