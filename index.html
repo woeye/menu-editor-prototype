@@ -93,18 +93,39 @@
           var groupingTitle = grouping.one('.grouping-title');
           if (groupingTitle) {
             groupingTitle.on('dblclick', function(e) {
+              //e.stopImmediatePropagation();
+
               var val = groupingTitle.get('text');
               var input = Y.Node.create('<input type="text" value="' + val + '"/>');
-              input.on('keypress', function(e) {
-                console.log(e);
-                if (e.keyCode == 13) {
-                  val = input.get('value');
+
+              function endEditing() {
                   groupingTitle.empty();
                   groupingTitle.set('text', val);
+              }
+
+              input.on('keypress', function(e) {
+                if (e.keyCode == 13) {
+                  val = input.get('value');
+                  endEditing();
                 }
               });
+              input.on('keyup', function(e) {
+                if (e.keyCode == 27) endEditing();
+              })
+              input.on('click', function(e) {
+                // Capture the event so that the body doesn't get it
+                e.stopImmediatePropagation();
+              });
+
               groupingTitle.empty();
               groupingTitle.append(input);
+              input.focus();
+
+              var escHandler = Y.one('#overlay').on('click', function(e) {
+                endEditing();
+                escHandler.detach();
+                escHandler = null;
+              });
             });
           }
 
@@ -150,16 +171,35 @@
             li.on('dblclick', function(e) {
               var val = li.get('text');
               var input = Y.Node.create('<input type="text" value="' + val + '"/>');
+
+              function endEditing() {
+                  li.empty();
+                  li.set('text', val);
+              }
+
               input.on('keypress', function(e) {
                 console.log(e);
                 if (e.keyCode == 13) {
                   val = input.get('value');
-                  li.empty();
-                  li.set('text', val);
+                  endEditing();
                 }
               });
+              input.on('keyup', function(e) {
+                if (e.keyCode == 27) endEditing();
+              })
+              input.on('click', function(e) {
+                e.stopImmediatePropagation();
+              });
+
               li.empty();
               li.append(input);
+              input.focus();
+
+              var escHandler = Y.one('#overlay').on('click', function(e) {
+                endEditing();
+                escHandler.detach();
+                escHandler = null;
+              });
             });
 
             var dd = new Y.DD.Drag({ 
