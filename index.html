@@ -9,10 +9,10 @@
 
     <link rel="stylesheet/less" type="text/css" href="css/main.less">
     <script src="js/less-1.3.0.min.js"></script>
-    <!--
     <script src="http://yui.yahooapis.com/3.5.0pr4/build/yui/yui-min.js"></script>
-    -->
+    <!--
     <script src="js/yui3/yui/yui.js"></script>
+    -->
   </head>
 
   <body class="yui3-app">
@@ -89,14 +89,14 @@
             inputNode.focus();
 
             inputNode.on('keypress', function(e) {
-              if (e.keyCode == 13) {
+              if (e.keyCode == 13) { // 13 => RETURN key
                 self._value = inputNode.get('value');
                 self.endEditing();
               }
             });
 
             inputNode.on('keyup', function(e) {
-              if (e.keyCode == 27) self.endEditing();
+              if (e.keyCode == 27) self.endEditing(); // 27 => ESC key
             })
 
             inputNode.on('click', function(e) {
@@ -146,12 +146,10 @@
           var dd = new Y.DD.Drag({
             node: grouping,
             target: true
-          })
-          .plug(Y.Plugin.DDProxy, {
+          }).plug(Y.Plugin.DDProxy, {
             moveOnEnd: false,
             cloneNode: true
-          })
-          .plug(Y.Plugin.DDConstrained, {
+          }).plug(Y.Plugin.DDConstrained, {
             constrain2node: overlay
           });
           dd.addHandle('.grouping-title');
@@ -160,15 +158,18 @@
             var drag = e.target;
             drag.get('node').setStyle('opacity', '.25');
           });
+
           dd.on('drag:drag', function(e) {
             var x = e.target.lastXY[0];
             draggingRight = (x > lastX);
             lastX = x;
           });
+
           dd.on('drag:end', function(e) {
             var drag = e.target;
             drag.get('node').setStyle('opacity', '1.0');
           });
+
           dd.on('drag:over', function(e) {
             var drag = e.drag.get('node'),
               drop = e.drop.get('node');
@@ -185,20 +186,14 @@
             li.plug(TextNodeEditorPlugin);
 
             var dd = new Y.DD.Drag({ 
-                node: li,
-                target: true
-              })
-              .plug(Y.Plugin.DDProxy, {
-                moveOnEnd: false,
-                cloneNode: true
-              })
-              .plug(Y.Plugin.DDConstrained, {
-                constrain2node: overlay
-              });
-
-/*            dd.on('drag:mouseup', function(e) {
-              console.log('mouseup');
-            });*/
+              node: li,
+              target: true
+            }).plug(Y.Plugin.DDProxy, {
+              moveOnEnd: false,
+              cloneNode: true
+            }).plug(Y.Plugin.DDConstrained, {
+              constrain2node: overlay
+            });
 
             dd.on('drag:start', function(e) {
               var drag = e.target;
@@ -206,51 +201,55 @@
 
               emptyCol = Y.Node.create('<div class="column empty"></div>');
               l3.append(emptyCol);
+              // Make emptyCol a drop taget
+              var x = new Y.DD.Drop({ node: emptyCol });
+              // Use a sexy fade-in transition :)
               emptyCol.transition({
                 easing: 'ease-in',
                 duration: 0.2,
                 opacity: '1.0'
               }, function() {
+                // When adding a new drop target during a drag operation
+                // we have to manually call ._activateTargets() or
+                // YUI3 won't see it
                 Y.DD.DDM._activateTargets(); // workaround
               });
-              var x = new Y.DD.Drop({ node: emptyCol });
-              x.on('drop:over', function(e) {
-                //console.log('FOOO');
-              });
             });
+
             dd.on('drag:drag', function(e) {
               var y = e.target.lastXY[1];
               draggingUp = (y < lastY);
               lastY = y;
             });
+
             dd.on('drag:end', function(e) {
               var drag = e.target;
               drag.get('node').setStyle('opacity', '1.0');
 
               if (emptyCol.hasChildNodes()) {
-                emptyCol.removeClass('empty'); // it's not empty anymore :)
+                emptyCol.removeClass('empty'); // it's not empty anymore 
               } else {
                 emptyCol.transition({
                   easing: 'ease-out',
                   duration: 0.2,
                   opacity: '0.0'
                 }, function() {
-                  console.log('anim done');
                   emptyCol.remove();                
                 });
               }
             });
+
             dd.on('drag:over', function(e) {
               var drag = e.drag.get('node'),
                 drop = e.drop.get('node');
               if (drop.get('tagName').toLowerCase() == 'li') {
-                console.log('XXXX');
                 drop.insert(drag, draggingUp ? 'before' : 'after');
-                e.drop.sizeShim();
+                e.drop.sizeShim(); // Resize the drop shim because the size might have changed
               } else if (drop.hasClass('empty')) {
                 drop.append(drag);
               }
             });
+
             dd.on('drag:drophit', function(e) {
               console.log('drop hit!');
               drop = e.drop.get('node');
