@@ -134,9 +134,10 @@
           });
         });
 
-        // Make the groupings draggable
-        overlay.all('.grouping').each(function(grouping) {
+        //---------------------------------------------------------------------
+        // Pimp a grouping node code
 
+        function pimpGroupingNode(grouping) {
           // Allow editing of the grouping title
           var groupingTitle = grouping.one('.grouping-title');
           if (groupingTitle) {
@@ -177,86 +178,127 @@
               drop.insert(drag, draggingRight ? 'after' : 'before');
             }
           });
-        });
 
-        overlay.all('.l3').each(function(l3) {
-          var emptyCol = false;
+        } 
 
-          l3.all('.column > li').each(function(li) {
-            li.plug(TextNodeEditorPlugin);
+        //---------------------------------------------------------------------
+        // Pimp entries inside a grouping node
 
-            var dd = new Y.DD.Drag({ 
-              node: li,
-              target: true
-            }).plug(Y.Plugin.DDProxy, {
-              moveOnEnd: false,
-              cloneNode: true
-            }).plug(Y.Plugin.DDConstrained, {
-              constrain2node: overlay
-            });
+        function pimpEntries(grouping) {
+          grouping.all('.l3').each(function(l3) {
+            var emptyCol = false;
 
-            dd.on('drag:start', function(e) {
-              var drag = e.target;
-              drag.get('node').setStyle('opacity', '.25');
+            l3.all('.column > li').each(function(li) {
+              li.plug(TextNodeEditorPlugin);
 
-              emptyCol = Y.Node.create('<div class="column empty"></div>');
-              l3.append(emptyCol);
-              // Make emptyCol a drop taget
-              var x = new Y.DD.Drop({ node: emptyCol });
-              // Use a sexy fade-in transition :)
-              emptyCol.transition({
-                easing: 'ease-in',
-                duration: 0.2,
-                opacity: '1.0'
-              }, function() {
-                // When adding a new drop target during a drag operation
-                // we have to manually call ._activateTargets() or
-                // YUI3 won't see it
-                Y.DD.DDM._activateTargets(); // workaround
+              var dd = new Y.DD.Drag({ 
+                node: li,
+                target: true
+              }).plug(Y.Plugin.DDProxy, {
+                moveOnEnd: false,
+                cloneNode: true
+              }).plug(Y.Plugin.DDConstrained, {
+                constrain2node: overlay
               });
-            });
 
-            dd.on('drag:drag', function(e) {
-              var y = e.target.lastXY[1];
-              draggingUp = (y < lastY);
-              lastY = y;
-            });
+              dd.on('drag:start', function(e) {
+                var drag = e.target;
+                drag.get('node').setStyle('opacity', '.25');
 
-            dd.on('drag:end', function(e) {
-              var drag = e.target;
-              drag.get('node').setStyle('opacity', '1.0');
-
-              if (emptyCol.hasChildNodes()) {
-                emptyCol.removeClass('empty'); // it's not empty anymore 
-              } else {
+                emptyCol = Y.Node.create('<div class="column empty"></div>');
+                l3.append(emptyCol);
+                // Make emptyCol a drop taget
+                var x = new Y.DD.Drop({ node: emptyCol });
+                // Use a sexy fade-in transition :)
                 emptyCol.transition({
-                  easing: 'ease-out',
+                  easing: 'ease-in',
                   duration: 0.2,
-                  opacity: '0.0'
+                  opacity: '1.0'
                 }, function() {
-                  emptyCol.remove();                
+                  // When adding a new drop target during a drag operation
+                  // we have to manually call ._activateTargets() or
+                  // YUI3 won't see it
+                  Y.DD.DDM._activateTargets(); // workaround
                 });
-              }
-            });
+              });
 
-            dd.on('drag:over', function(e) {
-              var drag = e.drag.get('node'),
+              dd.on('drag:drag', function(e) {
+                var y = e.target.lastXY[1];
+                draggingUp = (y < lastY);
+                lastY = y;
+              });
+
+              dd.on('drag:end', function(e) {
+                var drag = e.target;
+                drag.get('node').setStyle('opacity', '1.0');
+
+                if (emptyCol.hasChildNodes()) {
+                  emptyCol.removeClass('empty'); // it's not empty anymore 
+                } else {
+                  emptyCol.transition({
+                    easing: 'ease-out',
+                    duration: 0.2,
+                    opacity: '0.0'
+                  }, function() {
+                    emptyCol.remove();                
+                  });
+                }
+              });
+
+              dd.on('drag:over', function(e) {
+                var drag = e.drag.get('node'),
+                  drop = e.drop.get('node');
+                if (drop.get('tagName').toLowerCase() == 'li') {
+                  drop.insert(drag, draggingUp ? 'before' : 'after');
+                  e.drop.sizeShim(); // Resize the drop shim because the size might have changed
+                } else if (drop.hasClass('empty')) {
+                  drop.append(drag);
+                }
+              });
+
+              dd.on('drag:drophit', function(e) {
+                console.log('drop hit!');
                 drop = e.drop.get('node');
-              if (drop.get('tagName').toLowerCase() == 'li') {
-                drop.insert(drag, draggingUp ? 'before' : 'after');
-                e.drop.sizeShim(); // Resize the drop shim because the size might have changed
-              } else if (drop.hasClass('empty')) {
-                drop.append(drag);
-              }
-            });
+                //drop.removeClass('empty');
+              });
+            });          
+          });
+        }
 
-            dd.on('drag:drophit', function(e) {
-              console.log('drop hit!');
-              drop = e.drop.get('node');
-              //drop.removeClass('empty');
-            });
-          });          
+        //---------------------------------------------------------------------
+        // Add New Section code 
+
+        var addNewGroupingNode = overlay.one('.add-new-grouping');
+        addNewGroupingNode.on('click', function(e) {
+          var markup = 
+            '<ul class="grouping l2">' +
+              '<li>' +
+                '<span class="grouping-title">Sample Title</span>' +
+                '<ul class="l3">' +
+                  '<div class="column">' +
+                    '<li>Sample Entry</li>' +
+                  '</div>' +
+                '</ul>' +
+              '</li>' +
+            '</ul>';
+          
+          var newGroupingNode = Y.Node.create(markup);
+          var parent = addNewGroupingNode.get('parentNode').get('parentNode');
+          parent.insert(newGroupingNode, 'before');
+
+          pimpGroupingNode(newGroupingNode);
+          pimpEntries(newGroupingNode);
         });
+
+        //---------------------------------------------------------------------
+        // Initialize system
+
+        // Pimp all existing groups and their entries
+        overlay.all('.grouping').each(function(grouping) {
+          pimpGroupingNode(grouping);
+          pimpEntries(grouping);
+        });
+
       });
     </script>
   </body>
