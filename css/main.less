@@ -1,3 +1,13 @@
+// General settings
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// Overlay 
+
 #overlay {
   color: #fff;
   background-color: #444;
@@ -21,12 +31,6 @@
     clear: both;
   }
 
-  ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
   .grouping {
     float: left;
     font-size: 16px;
@@ -45,6 +49,7 @@
     }
 
     .grouping-title {
+      display: block;
       cursor: move;
 
       &:hover {
@@ -53,8 +58,10 @@
     }
   }
 
-  .l3 {
+  .column {
+    float: left;
     position: relative;
+    margin-top: 20px;
     font-size: 13px;
     //border: 1px solid white;
 
@@ -66,29 +73,24 @@
       clear: both;
     }
 
-    .column {
-      float: left;
-      margin-top: 20px;
+    &.empty {
+      min-width: 40px;
+      height: 100px;
+      border: 2px dashed #999;
+      opacity: 0;
+    }
 
-      &.empty {
-        min-width: 40px;
-        height: 100px;
-        border: 2px dashed #999;
-        opacity: 0;
+    li {
+      padding: 3px 0;
+      cursor: move;
+      margin-right: 30px;
+
+      &:hover {
+        outline: 1px solid #777;
       }
 
-      li {
-        padding: 3px 0;
-        cursor: move;
-        margin-right: 30px;
-
-        &:hover {
-          outline: 1px solid #777;
-        }
-
-        &:before {
-          content: "> ";
-        }
+      &:before {
+        content: "> ";
       }
     }
   }
