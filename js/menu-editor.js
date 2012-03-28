@@ -67,7 +67,7 @@ YUI().use('dd', 'transition', function(Y) {
     // Remove all empty column (both .empty and those who really have no childs left)
     Y.later(50, Y, function() {
       console.log('searching for empty columns ...');
-      Y.all('.l3 .column').each(function(column) {
+      overlay.all('.column').each(function(column) {
         if (!column.hasChildNodes()) {
           console.log('removing an empty column!');
           column.remove();                
@@ -127,10 +127,11 @@ YUI().use('dd', 'transition', function(Y) {
   // Pimp entries inside a grouping node
 
   function pimpEntries(grouping) {
-    grouping.all('.l3').each(function(l3) {
-      var emptyCol = false;
+    var outerLi = grouping.one('li'),
+        emptyCol = false;
 
-      l3.all('.column > li').each(function(li) {
+    outerLi.all('.column').each(function(column) {
+      column.all('li').each(function(li) {
         li.plug(TextNodeEditorPlugin);
 
         var dd = new Y.DD.Drag({ 
@@ -147,8 +148,8 @@ YUI().use('dd', 'transition', function(Y) {
           var drag = e.target;
           drag.get('node').setStyle('opacity', '.25');
 
-          emptyCol = Y.Node.create('<div class="column empty"></div>');
-          l3.append(emptyCol);
+          emptyCol = Y.Node.create('<ul class="column empty"></ul>');
+          outerLi.append(emptyCol);
           // Make emptyCol a drop taget
           var emptyColDrop = new Y.DD.Drop({ node: emptyCol });
           emptyColDrop.on('drop:hit', function(e) {
@@ -207,10 +208,10 @@ YUI().use('dd', 'transition', function(Y) {
           // The entry might have dragged to a new grouping. Therefore
           // we must update our l3 object so that it points
           // to its new ancestor!
-          var newl3 = li.ancestor('.l3');
-          console.log('my original grouping ID: ' + l3.get('id'));
-          console.log('my current grouping ID: ' + newl3.get('id'));
-          l3 = newl3;
+          var newOuterLi = li.ancestor('li');
+          console.log('my original grouping ID: ' + newOuterLi.get('id'));
+          console.log('my current grouping ID: ' + newOuterLi.get('id'));
+          outerLi = newOuterLi;
         });
       });          
     });
@@ -222,13 +223,11 @@ YUI().use('dd', 'transition', function(Y) {
   var addNewGroupingNode = overlay.one('.add-new-grouping');
   addNewGroupingNode.on('click', function(e) {
     var markup = 
-      '<ul class="grouping l2">' +
+      '<ul class="grouping">' +
         '<li>' +
           '<span class="grouping-title">Sample Title</span>' +
-          '<ul class="l3">' +
-            '<div class="column">' +
-              '<li>Sample Entry</li>' +
-            '</div>' +
+          '<ul class="column">' +
+            '<li>Sample Entry</li>' +
           '</ul>' +
         '</li>' +
       '</ul>';
